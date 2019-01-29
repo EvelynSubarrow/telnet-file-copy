@@ -8,7 +8,7 @@ parser.add_argument("port", type=int)
 
 parser.add_argument('file_here', type=argparse.FileType("rb"))
 parser.add_argument('file_there')
-parser.add_argument("-b", "--block-size", type=int, default=100, help="Number of bytes transferred each line")
+parser.add_argument("-b", "--block-size", type=int, default=200, help="Number of bytes transferred each line")
 parser.add_argument("--username", help="username")
 parser.add_argument("--password", help="password")
 args = parser.parse_args()
