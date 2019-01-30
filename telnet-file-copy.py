@@ -27,6 +27,7 @@ with args.file_here as f, socket.create_connection((args.host, args.port)) as s:
     file_size = f.tell()
     f.seek(0)
 
+    s.send(b"rm {}".format(args.file_there).encode("utf8"))
     s.send(b"echo READY\n")
 
     data = f.read(args.block_size)
