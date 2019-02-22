@@ -80,9 +80,13 @@ with args.file_here as f, socket.create_connection((args.host, args.port)) as s:
                     print("Local  hash {}".format(local_hash))
                     print("Remote hash {}".format(remote_hash))
                     print("Hashes {}".format("match"*(local_hash==remote_hash) or "do not match"))
-                    done = True
+                    if local_hash==remote_hash:
+                        exit(os.EX_OK)
+                    else:
+                        exit(os.EX_PROTOCOL)
         else:
             print()
             print("Read timed out")
-            exit()
+            exit(os.EX_IOERR)
     print()
+    exit(os.EX_OK)
