@@ -30,6 +30,7 @@ with args.file_here as f, socket.create_connection((args.host, args.port)) as s:
     file_size = f.tell()
     f.seek(0)
 
+    # Lastmost algorithm supported will be the one used
     s.send(b"echo | md5sum && echo HASHASH md5\n")
     s.send(b"echo | sha256sum && echo HASHASH sha256\n")
     s.send(b"echo | sha512sum && echo HASHASH sha512\n")
@@ -38,7 +39,7 @@ with args.file_here as f, socket.create_connection((args.host, args.port)) as s:
         s.send("rm {}\n".format(args.file_there).encode("utf8"))
     s.send(b"echo READY\n")
 
-    hash = hashlib.new("md5")
+    hash = None
 
     data = 1
     buffer_read = b""
@@ -72,8 +73,8 @@ with args.file_here as f, socket.create_connection((args.host, args.port)) as s:
                         print("\r{}/{} {}s".format(i*args.block_size + len(data), file_size, int(time.time()-start_time)), end='')
                         i += 1
                     else:
-                        if not args.no_hash_verification:
-                            s.send("echo HASH `md5sum {}`\n".format(args.file_there).encode("utf8"))
+                        if hash and not args.no_hash_verification:
+                            s.send("echo HASH `{}sum {}`\n".format(hash.name, args.file_there).encode("utf8"))
                         else:
                             done=True
                 elif line.startswith(b"HASH "):
@@ -87,6 +88,9 @@ with args.file_here as f, socket.create_connection((args.host, args.port)) as s:
                         exit(os.EX_OK)
                     else:
                         exit(os.EX_PROTOCOL)
+                elif line.startswith(b"HASHASH"):
+                    hash = hashlib.new(line.split(b" ")[1].decode("utf8"))
+                    print()
         else:
             print()
             print("Read timed out")
