@@ -30,15 +30,17 @@ with args.file_here as f, socket.create_connection((args.host, args.port)) as s:
     file_size = f.tell()
     f.seek(0)
 
+    s.send(b"echo | md5sum && echo HASHASH md5\n")
+    s.send(b"echo | sha256sum && echo HASHASH sha256\n")
+    s.send(b"echo | sha512sum && echo HASHASH sha512\n")
+
     if not args.no_removal:
         s.send("rm {}\n".format(args.file_there).encode("utf8"))
     s.send(b"echo READY\n")
 
     hash = hashlib.new("md5")
 
-    data = f.read(args.block_size)
-    hash.update(data)
-
+    data = 1
     buffer_read = b""
     i = 0
 
@@ -58,21 +60,22 @@ with args.file_here as f, socket.create_connection((args.host, args.port)) as s:
                 if args.verbose:
                     print(line)
                 if line==b"READY" and data:
-                    s.send("echo -ne '{}' >{} {} ; echo READY\n".format(
-                            ''.join([r"\x%02X" % a for a in data]),
-                            ">"*bool(i),
-                            args.file_there
-                        ).encode("utf8"))
-
-                    print("\r{}/{} {}s".format(i*args.block_size + len(data), file_size, int(time.time()-start_time)), end='')
                     data = f.read(args.block_size)
                     hash.update(data)
-                    i += 1
-                elif line==b"READY":
-                    if not args.no_hash_verification:
-                        s.send("echo HASH `md5sum {}`\n".format(args.file_there).encode("utf8"))
+                    if data:
+                        s.send("echo -ne '{}' >{} {} ; echo READY\n".format(
+                                ''.join([r"\x%02X" % a for a in data]),
+                                ">"*bool(i),
+                                args.file_there
+                            ).encode("utf8"))
+
+                        print("\r{}/{} {}s".format(i*args.block_size + len(data), file_size, int(time.time()-start_time)), end='')
+                        i += 1
                     else:
-                        done=True
+                        if not args.no_hash_verification:
+                            s.send("echo HASH `md5sum {}`\n".format(args.file_there).encode("utf8"))
+                        else:
+                            done=True
                 elif line.startswith(b"HASH "):
                     remote_hash = line.split(b" ")[1].decode("utf8")
                     local_hash = hash.hexdigest()
