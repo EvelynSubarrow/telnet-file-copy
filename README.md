@@ -4,6 +4,6 @@ aren't available. This tool should only be used as a last resort - it's slow, an
 integrity guarantees.
 
 On the remote end, all that's necessary is an `echo` command which supports the `-e` and `-n` flags.
-If a host has any of `md5sum`, `sha256sum` or `sha512sum`, the most preferable will be used to verify
-the integrity of the transfer, and if `base64` is present, this will be used for the transfer instead of
-`echo`.
+If the host has an appropriate shell, and any of `md5sum`, `sha256sum` or `sha512sum`, the most
+preferable will be used to verify the integrity of the transfer, and if `base64` is present, this
+will be used for the transfer instead of `echo`.
